@@ -74,7 +74,7 @@ void loop()
   }
   client.loop();
 
-  delay(3000);
+  // delay(3000); //delay会造成字符错位
   if (Serial.available() > 0)
   {
     reStr = Serial.readStringUntil('\n');
@@ -84,8 +84,8 @@ void loop()
     client.publish(pub, char_array);
   }
 
-  char char_array[10] = "8266test";
-  client.publish(pub, char_array);
+  // char char_array[10] = "8266test";
+  // client.publish(pub, char_array);
 
   // if (Serial.available() > 0)
   // {
