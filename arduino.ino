@@ -25,7 +25,7 @@ void setup() {
   //HC-SR04 Ultrasonic Distance Sensor
   pinMode(PIN_TRIG, OUTPUT);
   pinMode(PIN_ECHO, INPUT);
-    //LED
+  //LED
   pinMode(PIN_LED, OUTPUT);
   //DHT
   dht.begin();
@@ -66,10 +66,9 @@ void loop() {
   // serializeJson(sendJson, Serial);  
   // Serial.print("\n");
   
-  // 无法读mqttSerial口，因此从8266读数据只能用Serial即0RX口读；写数据到mqttSerial口正常
-  if(Serial.available() > 0){
-    while (Serial.available() > 0) { // 判断串口缓冲区是否有消息
-      String inputString = Serial.readStringUntil('\n');  
+  if(mqttSerial.available() > 0){
+    while (mqttSerial.available() > 0) { // 判断串口缓冲区是否有消息
+      String inputString = mqttSerial.readStringUntil('\n');  
       // Serial.println(inputString);
       //检测json数据是否完整，若通过则进行下一步的处理
       // int jsonBeginAt = inputString.indexOf("{",1);
