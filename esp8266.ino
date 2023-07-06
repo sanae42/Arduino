@@ -3,8 +3,8 @@
 // #define BUILTIN_LED 2
 char P_NAME[] = "OnePlus";           //设置热点名称
 char P_PSWD[] = "1234567890";          //设置热点密码
-char sub[] = "TrashCan/1";    //设置设备SUB名称
-char pub[] = "TrashCan/1";    //设置设备PUB名称
+char sub[] = "TrashCanSub/1";    //设置设备SUB名称
+char pub[] = "TrashCanPub/1";    //设置设备PUB名称
  
 const char *ssid = P_NAME;
 const char *password = P_PSWD;
@@ -83,23 +83,4 @@ void loop()
     reStr.toCharArray(char_array, str_len);
     client.publish(pub, char_array);
   }
-
-  // char char_array[10] = "8266test";
-  // client.publish(pub, char_array);
-
-  // if (Serial.available() > 0)
-  // {
-  //   reStr = Serial.readStringUntil('\n');
-  //   //检测json数据是否完整
-  //   int jsonBeginAt = reStr.indexOf("{");
-  //   int jsonEndAt = reStr.lastIndexOf("}");
-  //   if (jsonBeginAt != -1 && jsonEndAt != -1)
-  //   {
-  //     reStr = reStr.substring(jsonBeginAt, jsonEndAt + 1);
-  //     int str_len = reStr.length() + 1;
-  //     char char_array[str_len];
-  //     reStr.toCharArray(char_array, str_len);
-  //     client.publish(pub, char_array);
-  //   }
-  // }
 }
