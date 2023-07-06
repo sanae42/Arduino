@@ -1,4 +1,5 @@
-#include "DHT.h"
+#include "DHT.h" //DHT传感器库
+#include <ArduinoJson.h>//导入JSON库，用来封装发送数据的格式
 
 //HC-SR04 Ultrasonic Distance Sensor
 #define PIN_TRIG 3
@@ -9,6 +10,9 @@
 #define PIN_DHT 5     // Digital pin connected to the DHT sensor
 #define DHTTYPE DHT11
 DHT dht(PIN_DHT, DHTTYPE);
+
+StaticJsonDocument<500> sendJson;          // 创建JSON对象，用来存放发送数据
+static int id = 1;
 
 void setup() {
   Serial.begin(9600);
@@ -32,17 +36,27 @@ void loop() {
   int distance; // distance measurement
   duration = pulseIn(PIN_ECHO, HIGH); // Reads the echoPin, returns the sound wave travel time in microseconds
   distance = duration * 0.034 / 2; // Calculating the distance. Speed of sound wave divided by 2 (go and back)
-  Serial.print("Distance in CM: ");
-  Serial.print(distance );
+  // Serial.print("Distance in CM: ");
+  // Serial.print(distance );
 
   float h = dht.readHumidity();//读湿度
   float t = dht.readTemperature();//读温度(摄氏度)
 
-  Serial.print("Humidity:");
-  Serial.print(h);
-  Serial.print("% Temperature:");
-  Serial.print(t);
-  Serial.println("℃");
+  // Serial.print("Humidity:");
+  // Serial.print(h);
+  // Serial.print("% Temperature:");
+  // Serial.print(t);
+  // Serial.println("℃");
+
+  // 将数据添加到JSON对象中，左边为标识符，右边为变量
+  sendJson["Type"] = "TrashCan";
+  sendJson["Id"] = id;
+  sendJson["Distance"] = distance;
+  sendJson["Humidity"] = h;
+  sendJson["Temperature"] = t;
+  //将对象转换成字符串，并向esp8266发送消息
+  serializeJson(sendJson, Serial);  
+  Serial.print("\n");
 
   // blink();
 
