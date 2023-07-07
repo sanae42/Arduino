@@ -1,10 +1,11 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-// #define BUILTIN_LED 2
+
 char P_NAME[] = "OnePlus";           //设置热点名称
 char P_PSWD[] = "1234567890";          //设置热点密码
 char sub[] = "TrashCanSub/1";    //设置设备SUB名称
-char pub[] = "TrashCanPub/1";    //设置设备PUB名称
+char pub[] = "TrashCanPub";    //设置设备PUB名称
+int id = 1;
  
 const char *ssid = P_NAME;
 const char *password = P_PSWD;
