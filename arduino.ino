@@ -1,6 +1,7 @@
 #include "DHT.h" //DHT传感器库
 #include <ArduinoJson.h>//导入JSON库，用来封装发送数据的格式
 #include <SoftwareSerial.h>//库可以将Arduino的引脚，通过程序模拟成串口来使用
+#include <U8g2lib.h>//OLED
 
 SoftwareSerial mqttSerial(2,3); //定义D2、D3分别为RX,tx
 
@@ -13,9 +14,20 @@ SoftwareSerial mqttSerial(2,3); //定义D2、D3分别为RX,tx
 #define PIN_DHT 7     // Digital pin connected to the DHT sensor
 #define DHTTYPE DHT11
 DHT dht(PIN_DHT, DHTTYPE);
+//OLED
+U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-StaticJsonDocument<500> sendJson;          // 创建JSON对象，用来存放发送数据
-StaticJsonDocument<500> readJson;          // 创建JSON对象，用来存放接收到的数据
+/*
+ 项目使用 21996 字节（68%）的程序存储空间。最大值为 32256 字节。
+ 个全局变量使用 2113 个字节（103%）的动态内存，剩下 -65 个字节用于局部变量。最大值为 2048 字节。
+内存不足；有关减少空间的提示，请参见 https://support.arduino.cc/hc/en-us/articles/360013825179。
+数据部分超出开发板中的可用空间
+Compilation error: 数据部分超出开发板中的可用空间
+*/
+StaticJsonDocument<200> sendJson;          // 创建JSON对象，用来存放发送数据
+StaticJsonDocument<200> readJson;          // 创建JSON对象，用来存放接收到的数据
+// DynamicJsonDocument sendJson(500);
+// DynamicJsonDocument readJson(500);
 
 static int id = 1;
 
@@ -29,6 +41,8 @@ void setup() {
   pinMode(PIN_LED, OUTPUT);
   //DHT
   dht.begin();
+  //OLED
+  u8g2.begin();
 }
 
 void loop() {
@@ -53,13 +67,15 @@ void loop() {
   // Serial.print("% Temperature:");
   // Serial.print(t);
   // Serial.println("℃");
-
+  // DynamicJsonDocument sendJson(500); // 创建JSON对象，用来存放发送数据
+  // DynamicJsonDocument readJson(500); // 创建JSON对象，用来存放接收到的数据
   // 将数据添加到JSON对象中，左边为标识符，右边为变量
   sendJson["Type"] = "TrashCan";
   sendJson["Id"] = id;
   sendJson["Distance"] = distance;
   sendJson["Humidity"] = h;
   sendJson["Temperature"] = t;
+
   //将对象转换成字符串，并向esp8266发送消息
   serializeJson(sendJson, mqttSerial);  
   mqttSerial.print("\n");
@@ -87,6 +103,15 @@ void loop() {
     }
   }
 
+  //OLED
+  u8g2.setFont(u8g2_font_ncenB10_tr);  
+  u8g2.setFontDirection(0);
+  u8g2.firstPage();
+  do {
+    u8g2.setCursor(0, 15);
+    u8g2.print("distance: ");
+    u8g2.print(distance);
+  } while ( u8g2.nextPage() );
 
   // blink();
 
