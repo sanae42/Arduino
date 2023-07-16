@@ -70,7 +70,7 @@ void loop() {
   // DynamicJsonDocument sendJson(500); // 创建JSON对象，用来存放发送数据
   // DynamicJsonDocument readJson(500); // 创建JSON对象，用来存放接收到的数据
   // 将数据添加到JSON对象中，左边为标识符，右边为变量
-  sendJson["Type"] = "TrashCan";
+  sendJson["dataType"] = "trashCanDataCollect";
   sendJson["Id"] = id;
   sendJson["Distance"] = distance;
   sendJson["Humidity"] = h;
