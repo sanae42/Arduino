@@ -1,5 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include <SoftwareSerial.h> // 引入软串口库
 
 char P_NAME[] = "OnePlus";           //设置热点名称
 char P_PSWD[] = "1234567890";          //设置热点密码
@@ -15,6 +16,11 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 // #define MSG_BUFFER_SIZE (50)
 // char msg[MSG_BUFFER_SIZE];
+
+#define D5 (14)
+#define D6 (12)
+
+SoftwareSerial mqttSerial;     // Software Serial RX, TX
  
 void setup_wifi()
 {
@@ -32,9 +38,9 @@ void callback(char *topic, byte *payload, unsigned int length)
 {
   for (int i = 0; i < length; i++)
   {
-    Serial.print((char)payload[i]);
+    mqttSerial.print((char)payload[i]);
   }
-  Serial.println();
+  mqttSerial.println();
 }
  
 void reconnect()
@@ -60,6 +66,7 @@ void setup()
 {
   // pinMode(BUILTIN_LED, OUTPUT);
   Serial.begin(9600);
+  mqttSerial.begin(9600, SWSERIAL_8N1, D5, D6, false, 128);
   setup_wifi();
   client.setServer(mqtt_server, 1883); //1883端口
   client.setCallback(callback);
@@ -76,9 +83,9 @@ void loop()
   client.loop();
 
   // delay(3000); //delay会造成字符错位
-  if (Serial.available() > 0)
+  if (mqttSerial.available() > 0)
   {
-    reStr = Serial.readStringUntil('\n');
+    reStr = mqttSerial.readStringUntil('\n');
     int str_len = reStr.length() + 1;
     char char_array[str_len];
     reStr.toCharArray(char_array, str_len);
