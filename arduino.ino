@@ -21,6 +21,9 @@ U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 // #define SERIAL_TX_BUFFER_SIZE 128
 // #define SERIAL_RX_BUFFER_SIZE 128
 
+//深度
+#define Depth 100
+
 /*
  项目使用 21996 字节（68%）的程序存储空间。最大值为 32256 字节。
  个全局变量使用 2113 个字节（103%）的动态内存，剩下 -65 个字节用于局部变量。最大值为 2048 字节。
@@ -35,6 +38,10 @@ StaticJsonDocument<128> readJson;          // 创建JSON对象，用来存放接
 
 static int id = 1;
 
+//附近垃圾桶位置信息
+const String nearestTrashCanLocation;
+int mode = 1;
+
 void setup() {
   Serial.begin(9600);
   mqttSerial.begin(9600);
@@ -48,6 +55,7 @@ void setup() {
   dht.begin();
   //OLED
   u8g2.begin();
+
 }
 
 void loop() {
@@ -86,9 +94,15 @@ void loop() {
   mqttSerial.print("\n");
   // serializeJson(sendJson, Serial);  
   // Serial.print("\n");
-  
+
+
+  // 判断串口缓冲区是否有消息
   if(mqttSerial.available() > 0){
-    while (mqttSerial.available() > 0) { // 判断串口缓冲区是否有消息
+    if(mqttSerial.overflow()){
+      String str = "software serial overflow\n";
+      String box = mqttSerial.readStringUntil('\n');  
+      Serial.println(str);
+    }else{
       String inputString = mqttSerial.readStringUntil('\n');  
       // Serial.println(inputString);
       //检测json数据是否完整，若通过则进行下一步的处理
@@ -97,30 +111,93 @@ void loop() {
       // if (jsonBeginAt != -1 && jsonEndAt != -1)
       // if(true)
       // {
-      //   deserializeJson(readJson, inputString);                             //通过ArduinoJSON库将JSON字符串转换为方便操作的对象
-      //   // 判断接收的指令
-      //   if (readJson.containsKey("dataType"))   //判断是否包含标识符，如果是则进行下一步处理
-      //   {
-      //     String  dataType = readJson["dataType"];
-      //     Serial.print(dataType);
-      //     Serial.println();
-      //   }
+        if(inputString == "normal"){
+
+        }else if(inputString.compareTo("conservation") == 0){
+            mode = 2;
+        }else{
+          nearestTrashCanLocation = inputString;
+          // nearestTrashCanLocation += "\0";
+        }
+
+
+
+  // char json1[] ="{\"str\":\"welcome\",\"data1\":1351824120,\"data2\":[48.756080,2.302038],\"object\":{\"key1\":-254}}";
+  // StaticJsonDocument<100> jsonBuffer;  
+  // DeserializationError error = deserializeJson(jsonBuffer, json1);
+  // if(error){
+  //   Serial.println("error");
+  // }else{
+  //   Serial.println("no error");
+  // }
+
+        // deserializeJson(readJson, inputString);                             //通过ArduinoJSON库将JSON字符串转换为方便操作的对象
+        // // 判断接收的指令
+        // if (readJson.containsKey("dataType"))   //判断是否包含标识符，如果是则进行下一步处理
+        // {
+        //   String dataType = readJson["dataType"];
+        //   if(dataType == "nearestTrashCanData"){
+        //     // nearestTrashCanLocation = readJson["nearestTrashCanData"];
+        //     if (readJson.containsKey("nearestTrashCanData")){
+        //       String s = readJson["nearestTrashCanData"];
+        //       Serial.println(s);
+        //     }
+        //   }
+        // }
+
+
+
+
       // }
-      Serial.print(inputString+"\n");
+      // Serial.print(inputString+"\n");
     }
   }
 
+
   //OLED
-  u8g2.setFont(u8g2_font_ncenB10_tr);  
+  u8g2.setFont(u8g2_font_6x13_tf);  // 字体： https://github.com/olikraus/u8g2/wiki/fntlist12
   u8g2.setFontDirection(0);
   u8g2.firstPage();
+  bool isFull = ((float)(Depth)-distance)/(float)(Depth)*100 > 90;
   do {
-    u8g2.setCursor(0, 15);
-    u8g2.print("distance: ");
-    u8g2.print(distance);
+    if(isFull){
+      // u8g2.clearBuffer();
+      u8g2.setCursor(0, 9);
+      u8g2.print("Full! ");
+      u8g2.print(((float)(Depth)-distance)/(float)(Depth)*100);
+      u8g2.print("\%");
+
+      // nearestTrashCanLocation = "At the entrance of McDonald's. At the entrance of McDonald's. At the entrance of McDonald's";
+      // u8g2.setCursor(0, 25);
+      // u8g2.print(nearestTrashCanLocation);
+      int line = 0;
+      int characterInLine = 0;
+      u8g2.setCursor(0, 25);
+      for (char ch : nearestTrashCanLocation){
+        if(ch == '\0') break;
+        
+        if(characterInLine == 20){
+          line++;
+          u8g2.setCursor(0, 25+line*10);
+          characterInLine=0;
+        }
+        u8g2.print(ch);
+        characterInLine++;
+      }
+    }else{
+      // u8g2.clearBuffer();
+      u8g2.setCursor(0, 9);
+      u8g2.print("Not full:");
+      u8g2.print(((float)(Depth)-distance)/(float)(Depth)*100);
+      u8g2.print("\%");
+    }
+
+    // u8g2.setCursor(0, 47);
+    // u8g2.drawStr(0, 47,"test 888888888888888888888888888888888888888888888888888888");
   } while ( u8g2.nextPage() );
 
   // blink();
+  Serial.println(nearestTrashCanLocation);
 
   delay(3000);
 }
