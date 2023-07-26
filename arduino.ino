@@ -42,6 +42,10 @@ static int id = 1;
 const String nearestTrashCanLocation;
 int mode = 1;
 
+//计时
+int timeCount = 0;
+int previousDistance = 0;
+
 void setup() {
   Serial.begin(9600);
   // mqttSerial.begin(9600);
@@ -82,18 +86,47 @@ void loop() {
   // Serial.println("℃");
   // DynamicJsonDocument sendJson(500); // 创建JSON对象，用来存放发送数据
   // DynamicJsonDocument readJson(500); // 创建JSON对象，用来存放接收到的数据
-  // 将数据添加到JSON对象中，左边为标识符，右边为变量
-  sendJson["dataType"] = "trashCanDataCollect";
-  sendJson["Id"] = id;
-  sendJson["Distance"] = distance;
-  sendJson["Humidity"] = h;
-  sendJson["Temperature"] = t;
 
-  //将对象转换成字符串，并向esp8266发送消息
-  serializeJson(sendJson, Serial);  
-  Serial.print("\n");
-  // serializeJson(sendJson, Serial);  
-  // Serial.print("\n");
+  timeCount++;
+  bool ifSendJSONData = false;
+  bool bigChanged = ((float)(previousDistance)-distance)/(float)(Depth) > 0.1 || ((float)(previousDistance)-distance)/(float)(Depth) < -0.1;
+	switch (mode)
+	{
+	case 1:
+		ifSendJSONData = true;
+		break;
+	case 2:
+		if(timeCount >= 1200 || bigChanged || t > 45){
+      timeCount=0;
+      previousDistance = distance;
+      ifSendJSONData = true;
+    }
+		break;
+  case 3:
+		if(bigChanged || t > 45){
+      previousDistance = distance;
+      ifSendJSONData = true;
+    }
+		break;
+	default:
+		break;
+	}
+
+  if(ifSendJSONData){
+    // 将数据添加到JSON对象中，左边为标识符，右边为变量
+    sendJson["dataType"] = "trashCanDataCollect";
+    sendJson["Id"] = id;
+    sendJson["Distance"] = distance;
+    sendJson["Humidity"] = h;
+    sendJson["Temperature"] = t;
+    sendJson["Mode"] = mode;
+
+    //将对象转换成字符串，并向esp8266发送消息
+    serializeJson(sendJson, Serial);  
+    Serial.print("\n");
+    // serializeJson(sendJson, Serial);  
+    // Serial.print("\n");
+  }
 
 
   // 判断串口缓冲区是否有消息
@@ -108,8 +141,8 @@ void loop() {
       // if(true)
       // {
         //经测试，4个字符长度为5
-        if(inputString.length()<5){
-
+        if(inputString.length()<3){
+          mode = inputString.toInt();
         }else{
           nearestTrashCanLocation = inputString;
           // nearestTrashCanLocation += "\0";
@@ -158,7 +191,8 @@ void loop() {
       int line = 0;
       int characterInLine = 0;
       u8g2.setCursor(0, 25);
-      for (char ch : nearestTrashCanLocation){
+      String str = "the nearest trash can is "+nearestTrashCanLocation;
+      for (char ch : str){
         if(ch == '\0') break;
         
         if(characterInLine == 20){
@@ -181,8 +215,12 @@ void loop() {
     // u8g2.drawStr(0, 47,"test 888888888888888888888888888888888888888888888888888888");
   } while ( u8g2.nextPage() );
 
-  // blink();
-  // Serial.println(nearestTrashCanLocation);
+  // 判断是否高温
+  if(t>45){
+    digitalWrite(PIN_LED, HIGH);   // turn the LED on (HIGH is the voltage level)
+  }else{
+    digitalWrite(PIN_LED, LOW);    // turn the LED off by making the voltage LOW
+  }
 
   delay(3000);
 }
