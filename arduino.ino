@@ -16,6 +16,10 @@ SoftwareSerial mqttSerial(2,3); //定义D2、D3分别为RX,tx
 DHT dht(PIN_DHT, DHTTYPE);
 //OLED
 U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+// #define _SS_MAX_RX_BUFF  512  // 接收缓冲区
+// #define _SS_MAX_TX_BUFF 512  // 发送缓冲区
+// #define SERIAL_TX_BUFFER_SIZE 128
+// #define SERIAL_RX_BUFFER_SIZE 128
 
 /*
  项目使用 21996 字节（68%）的程序存储空间。最大值为 32256 字节。
@@ -24,8 +28,8 @@ U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 数据部分超出开发板中的可用空间
 Compilation error: 数据部分超出开发板中的可用空间
 */
-StaticJsonDocument<200> sendJson;          // 创建JSON对象，用来存放发送数据
-StaticJsonDocument<200> readJson;          // 创建JSON对象，用来存放接收到的数据
+StaticJsonDocument<128> sendJson;          // 创建JSON对象，用来存放发送数据
+StaticJsonDocument<128> readJson;          // 创建JSON对象，用来存放接收到的数据
 // DynamicJsonDocument sendJson(500);
 // DynamicJsonDocument readJson(500);
 
@@ -34,6 +38,7 @@ static int id = 1;
 void setup() {
   Serial.begin(9600);
   mqttSerial.begin(9600);
+
   //HC-SR04 Ultrasonic Distance Sensor
   pinMode(PIN_TRIG, OUTPUT);
   pinMode(PIN_ECHO, INPUT);
@@ -90,16 +95,18 @@ void loop() {
       // int jsonBeginAt = inputString.indexOf("{",1);
       // int jsonEndAt = inputString.lastIndexOf("}",inputString.lastIndexOf("}")-1);
       // if (jsonBeginAt != -1 && jsonEndAt != -1)
-      {
-        deserializeJson(readJson, inputString);                             //通过ArduinoJSON库将JSON字符串转换为方便操作的对象
-        // 判断接收的指令
-        if (readJson.containsKey("Distance"))   //判断是否包含标识符，如果是则进行下一步处理
-        {
-          int dis = (int)readJson["Distance"];
-          Serial.print(dis);
-          Serial.println();
-        }
-      }
+      // if(true)
+      // {
+      //   deserializeJson(readJson, inputString);                             //通过ArduinoJSON库将JSON字符串转换为方便操作的对象
+      //   // 判断接收的指令
+      //   if (readJson.containsKey("dataType"))   //判断是否包含标识符，如果是则进行下一步处理
+      //   {
+      //     String  dataType = readJson["dataType"];
+      //     Serial.print(dataType);
+      //     Serial.println();
+      //   }
+      // }
+      Serial.print(inputString+"\n");
     }
   }
 
