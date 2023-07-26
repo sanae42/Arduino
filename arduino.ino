@@ -1,9 +1,9 @@
 #include "DHT.h" //DHT传感器库
 #include <ArduinoJson.h>//导入JSON库，用来封装发送数据的格式
-#include <SoftwareSerial.h>//库可以将Arduino的引脚，通过程序模拟成串口来使用
+// #include <SoftwareSerial.h>//库可以将Arduino的引脚，通过程序模拟成串口来使用
 #include <U8g2lib.h>//OLED
 
-SoftwareSerial mqttSerial(2,3); //定义D2、D3分别为RX,tx
+// SoftwareSerial mqttSerial(2,3); //定义D2、D3分别为RX,tx
 
 //HC-SR04 Ultrasonic Distance Sensor
 #define PIN_TRIG 6
@@ -44,7 +44,7 @@ int mode = 1;
 
 void setup() {
   Serial.begin(9600);
-  mqttSerial.begin(9600);
+  // mqttSerial.begin(9600);
 
   //HC-SR04 Ultrasonic Distance Sensor
   pinMode(PIN_TRIG, OUTPUT);
@@ -90,20 +90,16 @@ void loop() {
   sendJson["Temperature"] = t;
 
   //将对象转换成字符串，并向esp8266发送消息
-  serializeJson(sendJson, mqttSerial);  
-  mqttSerial.print("\n");
+  serializeJson(sendJson, Serial);  
+  Serial.print("\n");
   // serializeJson(sendJson, Serial);  
   // Serial.print("\n");
 
 
   // 判断串口缓冲区是否有消息
-  if(mqttSerial.available() > 0){
-    if(mqttSerial.overflow()){
-      String str = "software serial overflow\n";
-      String box = mqttSerial.readStringUntil('\n');  
-      Serial.println(str);
-    }else{
-      String inputString = mqttSerial.readStringUntil('\n');  
+  if(Serial.available() > 0){
+    {
+      String inputString = Serial.readStringUntil('\n');  
       // Serial.println(inputString);
       //检测json数据是否完整，若通过则进行下一步的处理
       // int jsonBeginAt = inputString.indexOf("{",1);
@@ -111,25 +107,14 @@ void loop() {
       // if (jsonBeginAt != -1 && jsonEndAt != -1)
       // if(true)
       // {
-        if(inputString == "normal"){
+        //经测试，4个字符长度为5
+        if(inputString.length()<5){
 
-        }else if(inputString.compareTo("conservation") == 0){
-            mode = 2;
         }else{
           nearestTrashCanLocation = inputString;
           // nearestTrashCanLocation += "\0";
         }
 
-
-
-  // char json1[] ="{\"str\":\"welcome\",\"data1\":1351824120,\"data2\":[48.756080,2.302038],\"object\":{\"key1\":-254}}";
-  // StaticJsonDocument<100> jsonBuffer;  
-  // DeserializationError error = deserializeJson(jsonBuffer, json1);
-  // if(error){
-  //   Serial.println("error");
-  // }else{
-  //   Serial.println("no error");
-  // }
 
         // deserializeJson(readJson, inputString);                             //通过ArduinoJSON库将JSON字符串转换为方便操作的对象
         // // 判断接收的指令
@@ -197,7 +182,7 @@ void loop() {
   } while ( u8g2.nextPage() );
 
   // blink();
-  Serial.println(nearestTrashCanLocation);
+  // Serial.println(nearestTrashCanLocation);
 
   delay(3000);
 }
