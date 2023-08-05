@@ -1,3 +1,6 @@
+/**
+* refer to : https://blog.csdn.net/m0_52991090/article/details/122157194
+*/
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <SoftwareSerial.h> // 引入软串口库
